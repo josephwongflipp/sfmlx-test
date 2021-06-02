@@ -2,20 +2,10 @@
     <head>Head?</head>
     <body>
         <linear-layout width="match-parent" height="wrap-content">
-            <advertisement width="match-parent" height="wrap-content" cache_key="1">
-                <url-source url="https://www.bookwebmaster.com/training/wp-content/uploads/2019/06/Doha2019.png" width="wrap-content" height="wrap-content"/>
-            </advertisement>
-            <linear-layout width="match-parent" height="wrap-content" style-id="xxxss_b1a6cd4b-83b9-4a07-a0e9-699cbe14af99">
-                <flexbox orientation="horizontal" width="match-parent" height="wrap-content" style-id="ss_b1a6cd4b-83b9-4a07-a0e9-699cbe14af99">
-                    <item-atom width="0" height="match-parent" source-id="do_offer-sku-1000694311-ds1_7037" source="offer" payload-sku="1000694311" style-id="ss_1736dee6-6552-4847-b4af-2969346415e1" image-position="image-top" flex-grow="1" image-url="https://dummyimage.com/381x358/ff0000/ffffff.png%26text=Item%20Atom" image-width="146" image-height="196">
-                        <text style-id="ss_67435266-c1b1-4095-9508-ddf6c9ce28af" value="SAVE $15">a</text>
-                        <text style-id="ss_940e71a5-563d-49fe-b817-0af1f8638849" value="$249.00">b</text>
-                        <text style-id="ss_909c1711-1fb5-446d-851a-f41563248dfd" value="was $264.00">c</text>
-                        <text style-id="ss_c6106495-6cc1-4a71-8ce0-0e329e8d7cce" value="Pixie Electric Titan" max-lines="2">d</text>
-                        <text style-id="ss_asdfg_skdjdfkslkjaaksjdkfasjdkfjaask" value="13.5 to 34.2-oz">e</text>
-                    </item-atom>
-                </flexbox>
-            </linear-layout>
+
+            <linear-layout width="match-parent" height="wrap-content" style-id="xxxss_b1a6cd4b-83b9-4a07-a0e9-699cbe14af99"></linear-layout>
+            <linear-layout width="match-parent" height="wrap-content" style-id="xxxss_b1a6cd4b-83b9-4a07-a0e9-699cbe14af99"></linear-layout>
+            <linear-layout width="match-parent" height="wrap-content" style-id="xxxss_b1a6cd4b-83b9-4a07-a0e9-699cbe14af99"></linear-layout>
         </linear-layout>
     </body>
 </storefront>

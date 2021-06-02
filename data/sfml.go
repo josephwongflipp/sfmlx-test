@@ -1,3 +1,7 @@
+/*
+IGNORE
+*/
+
 package data
 
 import "encoding/xml"

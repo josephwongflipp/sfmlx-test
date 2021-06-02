@@ -1,3 +1,12 @@
+/*
+This package is responsible for all CRUD actions against an SFML file.
+
+Actions include:
+- Counting the number of valid advertisement slots in an SFML document
+- Injecting advertisements in an SFML document
+- Returning valid SFML
+*/
+
 package sfmlparser
 
 import (
@@ -21,17 +30,15 @@ func ReadSFMLFile(filePath string) []byte {
 	return dat
 }
 
-// Generic node
+// Generic XML node
 type Node struct {
 	XMLName xml.Name
 	Content []byte `xml:",innerxml"`
 	Nodes   []Node `xml:",any"`
 }
 
-// STRUCTS begin
-
+// Root element of an SFML file
 type Storefront struct {
-	// root
 	XMLName     xml.Name `xml:"storefront"`
 	Title       string   `xml:"title,attr"`
 	Subtitle    string   `xml:"subtitle,attr"`
@@ -49,6 +56,7 @@ type Body struct {
 	RootLinearLayout LinearLayout `xml:"linear-layout"`
 }
 
+// Only used to represent the Root linear-layout in the Body
 type LinearLayout struct {
 	XMLName xml.Name `xml:"linear-layout"`
 	Height  string   `xml:"height,attr"`
@@ -57,6 +65,7 @@ type LinearLayout struct {
 	Nodes   []Node   `xml:",any"`
 }
 
+// Our custom advertisement element wrapper
 type Advertisement struct {
 	XMLName   xml.Name  `xml:"advertisement"`
 	Height    string    `xml:"height,attr"`
@@ -64,6 +73,7 @@ type Advertisement struct {
 	URLSource URLSource `xml:"url-source"`
 }
 
+// Our customer url-source element that lives inside an advetisement
 type URLSource struct {
 	XMLName xml.Name `xml:"url-source"`
 	Height  string   `xml:"height,attr"`
@@ -71,7 +81,43 @@ type URLSource struct {
 	URL     string   `xml:"url,attr"`
 }
 
-// STRUCTS end
+// Reads in an SFML file and injects up to <maxAds> advertisements every <offset> slots
+func injectAds(xmlData []byte, maxAds int, offset int) []byte {
+	buf := bytes.NewBuffer(xmlData)
+	dec := xml.NewDecoder(buf)
+
+	var sf Storefront
+	err := dec.Decode(&sf)
+	checkError(err)
+
+	nodes := sf.Body.RootLinearLayout.Nodes
+
+	// for i, node := range nodes {
+
+	// 	// We do not insert ads into the first and last index
+	// 	if i == 0 {
+	// 		continue
+	// 	}
+
+	// 	us := &URLSource{
+	// 		Height: "wrap-content",
+	// 		Width:  "match-parent",
+	// 		URL:    "https://fh-uploads-addressreport.netdna-ssl.com/d79274ca-877f-437f-9ca0-e7230ea1ff46",
+	// 	}
+
+	// 	advertisement := &Advertisement{
+	// 		Height:    "wrap-content",
+	// 		Width:     "wrap-content",
+	// 		URLSource: *us,
+	// 	}
+
+	// 	encoder := xml.NewEncoder(os.Stdout)
+
+	// 	nodes[i] = advertisement
+	// }
+
+	return sf
+}
 
 func CountAdSlots(xmlData []byte) int {
 
@@ -85,22 +131,7 @@ func CountAdSlots(xmlData []byte) int {
 	firstLinearLayout := sf.Body.RootLinearLayout
 
 	return countLinearLayoutElements(firstLinearLayout.Nodes)
-
-	// walk(firstLinearLayout.Nodes, func(n Node) bool {
-	// 	fmt.Println("Checking element: ", n.XMLName.Local)
-	// 	if n.XMLName.Local == "text" {
-	// 		fmt.Println(string(n.Content))
-	// 	}
-	// })
 }
-
-// func walk(ll []Node, f func(Node) bool) {
-// 	for _, n := range ll {
-// 		if f(n) {
-// 			walk(n.Nodes, f)
-// 		}
-// 	}
-// }
 
 func countLinearLayoutElements(nodes []Node) int {
 

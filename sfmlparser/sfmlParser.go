@@ -58,7 +58,7 @@ func InjectAdsIntoSFML(d []byte) []byte {
 		s = append(s, element)
 
 		// Do not inject an ad before the first index or after the last index.
-		if i < 16 {
+		if i < len(rootLL.ChildElements())-1 {
 			advertisement := generateAdvertisementElement()
 			_, err := xml.Marshal(advertisement)
 			handleErr(err)

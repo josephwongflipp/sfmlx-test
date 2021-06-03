@@ -16,5 +16,6 @@ To change up the sfml, edit `sfmlParser.go` and point to another sfml file
 
 -   [x] Traverse XML and count number of possible ad slots
 -   [x] Turn the project into a deployable HTTP service
--   [x] Introduce an endpoint that accepts flyerId, flyerRunId, merchantId, etc... and retrieve our production sfmls, and returns to the caller the modified SFML with ads
+-   [x] Introduce an endpoint that returns sfml
+-   [ ] Endpoint accepts flyerId, flyerRunId, merchantId, etc... and retrieve our production sfmls, and returns to the caller the modified SFML with ads
 -   [ ] Introduce a config that outlines business rules on when and where ads are injected.

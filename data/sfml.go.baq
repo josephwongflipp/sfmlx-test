@@ -1,0 +1,140 @@
+/*
+IGNORE
+*/
+
+package data
+
+import "encoding/xml"
+
+// Root
+type Storefront struct {
+	XMLName xml.Name `xml:"storefront"`
+
+	Head Head `xml:"head"`
+	Body Body `xml:"body"`
+
+	Title       string `xml:"title,attr"`
+	Subtitle    string `xml:"subtitle,attr"`
+	UUID        string `xml:"uuid,attr"`
+	Revision    int    `xml:"revision,attr"`
+	SfmlVersion string `xml:"sfml-version,attr"`
+	RunID       string `xml:"run-id,attr"`
+	SegmentID   string `xml:"segment-id,attr"`
+	StoreID     string `xml:"store-id,attr"`
+	LanguageID  string `xml:"language,attr"`
+}
+
+//
+type Head struct {
+	XMLName   xml.Name  `xml:"head"`
+	WayFinder WayFinder `xml:"wayfinder"`
+	Styles    Styles    `xml:"styles"`
+}
+
+type WayFinder struct {
+	XMLName  xml.Name `xml:"wayfinder"`
+	Category Category `xml:"category"`
+}
+
+type Category struct {
+	XMLName  xml.Name `xml:"category"`
+	Name     string   `xml:"name"`
+	AnchorID int      `xml:"anchor-id"`
+	ID       int      `xml:"id"`
+}
+
+type Styles struct {
+	XMLName xml.Name `xml:"styles"`
+	Style   []Style  `xml:"style"`
+}
+
+type Style struct {
+	XMLName         xml.Name        `xml:"style"`
+	ID              string          `xml:"id"`
+	BorderStyle     BorderStyle     `xml:"borderStyle"`
+	PaddingStyle    PaddingStyle    `xml:"paddingStyle"`
+	MarginStyle     MarginStyle     `xml:"marginStyle"`
+	BackgroundStyle BackgroundStyle `xml:"backgroundStyle"`
+	TextStyle       TextStyle       `xml:"textStyle"`
+}
+
+// DO NOT USE --- attribute group for referencing only
+type borderStyle struct {
+	BorderTopShow    bool            `xml:"border-top-show,attr"`
+	BorderBottomShow bool            `xml:"border-bottom-show,attr"`
+	BorderLeftShow   bool            `xml:"border-left-show,attr"`
+	BorderRightShow  bool            `xml:"border-right-show,attr"`
+	BorderColor      string          `xml:"border-color,attr"` // #e1e1e1
+	BorderStyle      BorderStyleType `xml:"border-style,attr"`
+	BorderWidth      PositiveInteger `xml:"border-width,attr"`
+}
+
+type BackgroundStyle struct {
+	XMLName         xml.Name `xml:"backgroundStyle"`
+	BackgroundURL   string   `xml:"background-url"`
+	BackgroundColor Color    `xml:"background-color"`
+}
+
+type PaddingStyle struct {
+	XMLName xml.Name `xml:"paddingStyle"`
+	Padding RectType `xml:"padding"`
+}
+
+type MarginStyle struct {
+	XMLName xml.Name `xml:"paddingStyle"`
+	Padding RectType `xml:"margin"`
+}
+
+type TextStyle struct {
+	XMLName     xml.Name   `xml:"textStyle"`
+	FontFaceSrc AnyURI     `xml:"font-face-src"`
+	FontFamily  stirng     `xml:"font-family"`
+	FontWeight  FontWeight `xml:"font-weight"`
+	FontColor   Color      `xml:"font-color"`
+	FontSize    int        `xml:"font-size"`
+}
+
+/*
+
+
+   <xs:attributeGroup name="textStyle">
+       <xs:attribute name="font-face-src" type="xs:anyURI" use="optional"/>
+       <xs:attribute name="font-family" type="xs:string" use="optional"/>
+       <xs:attribute name="font-weight" type="sfml:font-weight" default="normal" use="optional"/>
+       <xs:attribute name="font-color" type="sfml:color" use="optional"/>
+       <xs:attribute name="font-size" type="xs:integer" use="optional"/>
+   </xs:attributeGroup>
+*/
+
+type Body struct {
+	XMLName          xml.Name     `xml:"body"`
+	RootLinearLayout LinearLayout `xml:"linear-layout"`
+}
+
+type LinearLayout struct {
+	XMLName       xml.Name        `xml:"linear-layout"`
+	Height        string          `xml:"height,attr"`
+	Width         string          `xml:"width,attr"`
+	LinearLayout  []LinearLayout  `xml:"linear-layout"`
+	Advertisement []Advertisement `xml:"advertisement"`
+}
+
+type Advertisement struct {
+	XMLName   xml.Name  `xml:"advertisement"`
+	Height    string    `xml:"height,attr"`
+	Width     string    `xml:"width,attr"`
+	URLSource URLSource `xml:"url-source"`
+}
+
+type URLSource struct {
+	XMLName xml.Name `xml:"url-source"`
+	Height  string   `xml:"height,attr"`
+	Width   string   `xml:"width,attr"`
+	URL     string   `xml:"url,attr"`
+}
+
+func FromXML(d []byte) *Storefront {
+	sfml := &Storefront{}
+	xml.Unmarshal([]byte(d), &sfml)
+	return sfml
+}

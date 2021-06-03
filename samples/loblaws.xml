@@ -13,7 +13,7 @@
       <category anchor-id="8" name="Personal Care"/>
       <category anchor-id="12" name="Drinks"/>
       <category anchor-id="15" name="Dairy &amp; Eggs"/>
-    </wayfinder>
+    </wayfinder> 
   </head>
   <body>
     <linear-layout width="match-parent" height="wrap-content">

@@ -2,8 +2,10 @@
     <head>Head?</head>
     <body>
         <linear-layout width="match-parent" height="wrap-content">
-
             <linear-layout width="match-parent" height="wrap-content" style-id="xxxss_b1a6cd4b-83b9-4a07-a0e9-699cbe14af99"></linear-layout>
+            
+            <advertisement></advertisement>
+            
             <linear-layout width="match-parent" height="wrap-content" style-id="xxxss_b1a6cd4b-83b9-4a07-a0e9-699cbe14af99"></linear-layout>
             <linear-layout width="match-parent" height="wrap-content" style-id="xxxss_b1a6cd4b-83b9-4a07-a0e9-699cbe14af99"></linear-layout>
         </linear-layout>

@@ -1,20 +1,31 @@
 package main
 
 import (
-	"fmt"
+	"encoding/xml"
 
+	"github.com/wishabi/sfmlx-test/data"
 	"github.com/wishabi/sfmlx-test/sfmlparser"
 )
 
 func main() {
-	fmt.Println("Hello World.")
+	sfml := sfmlparser.ReadSFMLFile("./samples/loblaws.xml")
 
-	s := sfmlparser.ReadSFMLFile("./skeleton.xml")
-	// fmt.Printf("a %s", s)
-	// sfml := data.FromXML(s)
-	// fmt.Println(sfml)
-	// buf, _ := xml.MarshalIndent(sfml, "", "\t")
-	// fmt.Println(string(buf))
+	mySFML := &data.Storefront{}
 
-	sfmlparser.CountAdSlots(s)
+	err := xml.Unmarshal(sfml, mySFML)
+	if err != nil {
+		panic(err)
+	}
+
+	// fmt.Println(mySFML)
+	// fmt.Printf("%+v\n", mySFML)
+
+	// myXml, err := xml.Marshal(mySFML)
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// // fmt.Println(myXml)
+	// fmt.Printf(string(myXml))
+
+	sfmlparser.PraseEtree(sfml)
 }

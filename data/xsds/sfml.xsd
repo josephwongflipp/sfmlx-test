@@ -1,0 +1,566 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    xmlns:xerces="http://xerces.apache.org" targetNamespace="http://schemas.flipp.com/sfml/2.0"
+    xmlns:sfml="http://schemas.flipp.com/sfml/2.0" elementFormDefault="qualified">
+
+    <!--
+Authoring tools are being standardized on the following structure:
+Storefront
+ |-> Section (Logical grouping of related content)
+     |-> Module (Contains layout information for a specific area)
+         |-> Atom (Individual items)
+
+In existing SFML terms, this can concretely be represented using existing SMFL
+ |-> Module (linear-layout)
+     |-> Nested Module (flexbox inside a linear-layout)
+         |-> Atom (ItemAtom/Image)
+-->
+
+    <!-- root containers -->
+    <xs:element name="storefront">
+        <xs:complexType >
+            <xs:sequence>
+                <xs:element ref="sfml:head"/>
+                <xs:element ref="sfml:body"/>
+            </xs:sequence>
+            <!--
+                the name flyer, usually the name of merchant
+            -->
+            <xs:attribute name="title" type="sfml:nonEmptyString" use="required"/>
+            <!--
+                At the moment subtitle is set into date of publication
+            -->
+            <xs:attribute name="subtitle" type="xs:string" use="optional"/>
+            <!--
+                uuid is a unique id for each flyer,
+                it could be possible to generate same uuid with different revision number
+            -->
+            <xs:attribute name="uuid" type="sfml:nonEmptyString" use="required"/>
+            <!--
+                revision is a new way of describing version in production's sfml
+                this value is positive integer and only be set if upstream blueprint
+                provides it.
+            -->
+            <xs:attribute name="revision" type="xs:integer" use="optional"/>
+
+            <!--
+               SFML version is the semantic versioning of the SFML document
+               As of 2020-11, the only expected value is "2.0". Earlier
+               documents omit this field and should be treated as version 1.0
+            -->
+            <xs:attribute name="sfml-version" type="xs:string" use="required"/>
+
+            <xs:attribute name="run-id" type="xs:string" use="required"/>
+            <xs:attribute name="segment-id" type="xs:string" use="required"/>
+            <xs:attribute name="store-id" type="xs:integer" use="required"/>
+
+            <!--
+                language can be any of the following fields
+
+                "en" for ENGLISH
+                "fr" for FRENCH
+                "es" for SPANISH
+
+                language-id has a simple type which enforces the values
+                they can have. Please refer to sfml:language
+            -->
+            <xs:attribute name="language-id" type="sfml:language" use="required"/>            
+        </xs:complexType>
+    </xs:element>
+
+    <!-- layout elements -->
+
+    <xs:element name="linear-layout">
+        <xs:complexType >
+            <xs:sequence>
+                <xs:choice minOccurs="1" maxOccurs="unbounded">
+                    <xs:element ref="sfml:image"/>
+                    <xs:element ref="sfml:linear-layout"/>
+                    <xs:element ref="sfml:flexbox"/>
+                    <xs:element ref="sfml:item-atom"/>
+                    <xs:element ref="sfml:collapsible-layout"/>
+                </xs:choice>
+                <xs:choice minOccurs="0" maxOccurs="unbounded">
+                    <xs:element ref="sfml:badge"/>
+                </xs:choice>
+            </xs:sequence>
+            <xs:attributeGroup ref="sfml:UIElement"/>
+            <xs:attribute name="orientation" type="sfml:orientationType"/>
+            <xs:attributeGroup ref="sfml:StyleableElement"/>
+            <xs:assert test="if(string(@width) = 'preserve-aspect') then string(@height) != 'preserve-aspect' else true()" xerces:message="width and height cant both be preserve-aspect"/>
+            <xs:assert test="not(child::node()[@flex-grow])" xerces:message="there are children of a linear-layout with the flex-grow attribute"/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="flexbox">
+        <xs:complexType >
+            <xs:sequence>
+                <xs:choice minOccurs="1" maxOccurs="unbounded">
+                    <xs:element ref="sfml:image"/>
+                    <xs:element ref="sfml:linear-layout"/>
+                    <xs:element ref="sfml:flexbox"/>
+                    <xs:element ref="sfml:item-atom"/>
+                    <xs:element ref="sfml:collapsible-layout"/>
+                </xs:choice>
+                <xs:choice minOccurs="0" maxOccurs="unbounded">
+                    <xs:element ref="sfml:badge"/>
+                </xs:choice>
+            </xs:sequence>
+            <xs:attributeGroup ref="sfml:UIElement"/>
+            <xs:attribute name="orientation" type="sfml:orientationType"/>
+            <xs:attributeGroup ref="sfml:StyleableElement"/>
+            <xs:assert test="if(string(@width) = 'preserve-aspect') then string(@height) != 'preserve-aspect' else true()" xerces:message="width and height cant both be preserve-aspect"/>
+            <xs:assert test="if(@orientation = 'horizontal') then string(@width) != 'wrap-content' else true()" xerces:message="flexbox width must not be wrap-content when the orientation is horizontal"/>
+            <xs:assert test="if(@orientation = 'vertical') then string(@height) != 'wrap-content' else true()" xerces:message="flexbox height must not be wrap-content when the orientation is vertical"/>
+            <xs:assert test="if(@orientation = 'horizontal') then not(child::node()[@flex-grow and @width!=0]) else true()" xerces:message="width of all flex-grow children must be 0 when flexbox is horizontal"/>
+            <xs:assert test="if(@orientation = 'vertical') then not(child::node()[@flex-grow and @height!=0]) else true()" xerces:message="height of all flex-grow children must be 0 when flexbox is vertical"/>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- Views -->
+
+    <xs:element name="image">
+        <xs:complexType >
+            <xs:sequence>
+                <xs:choice minOccurs="1" maxOccurs="unbounded">
+                    <xs:element ref="sfml:url-source"/>
+                    <xs:element ref="sfml:flyer-source"/>
+                </xs:choice>
+                <xs:choice minOccurs="0" maxOccurs="unbounded">
+                    <xs:element ref="sfml:badge"/>
+                </xs:choice>
+            </xs:sequence>
+            <xs:attributeGroup ref="sfml:UIElement"/>
+            <xs:attributeGroup ref="sfml:StyleableElement"/>
+            <xs:assert test="if(string(@width) = 'preserve-aspect') then string(@height) != 'preserve-aspect' else true()" xerces:message="width and height cant both be preserve-aspect"/>
+            <xs:assert test="not(child::node()[@flex-grow])" xerces:message="there are children of a linear-layout with the flex-grow attribute"/>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- Components. i.e. complex views that the front end will control the definition -->
+    <xs:element name="badge">
+        <xs:complexType>
+            <!-- Badge positioning is based on two sets of values:
+                     - h-pos/v-pos - relative values to container your are badging.
+                       0,0 is top-left corner, 1,1 is bottom-right
+                     - x/y - the point of the badge itself used to position.  So, if
+                       h-pos/v-pos is 0,0 and x/y is 1,1 - then the bottom right point
+                       of the badge will be placed on the top left corner of container
+            -->
+            <xs:attribute name="url" type="xs:anyURI" use="required"/>
+            <xs:attribute name="width" type="sfml:positive-decimal" use="required"/>
+            <xs:attribute name="height" type="sfml:positive-decimal" use="required"/>
+            <xs:attribute name="h-pos" type="xs:decimal" use="required"/>
+            <xs:attribute name="v-pos" type="xs:decimal" use="required"/>
+            <xs:attribute name="x" type="sfml:anchorPosition" use="optional" default="start"/>
+            <xs:attribute name="y" type="sfml:anchorPosition" use="optional" default="start"/>
+            <xs:attribute name="badge-application" type="sfml:badgeApplication" use="optional"/>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- Metadata for actions, ie. interactions at an atom or area level
+         For example, TTM URLs and future third party URLs/beacons can go here -->
+    <xs:element name="action">
+        <xs:complexType>
+            <xs:attribute name="type" type="sfml:actionType" use="required"/>
+            <xs:attribute name="ttm-url" type="xs:anyURI" use="optional"/>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- Supporting metadata to be used by beacons -->
+    <xs:element name="beacon-meta">
+        <xs:complexType>
+            <!-- SKU: required for ecom and ecom-search item-atom beacons -->
+            <xs:attribute name="sku" type="xs:string" use="optional"/>
+            <!-- item-id: required for ecom and ecom-search item-atom beacons -->
+            <xs:attribute name="item-id" type="xs:string" use="optional"/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="item-atom">
+        <xs:complexType >
+            <xs:sequence>
+                <xs:element ref="sfml:action" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="sfml:beacon-meta" minOccurs="0" maxOccurs="1"/>
+                <xs:choice minOccurs="0" maxOccurs="unbounded">
+                    <xs:element ref="sfml:badge"/>
+                </xs:choice>
+                <xs:choice minOccurs="0" maxOccurs="5">
+                    <xs:element ref="sfml:text"/>
+                </xs:choice>
+            </xs:sequence>
+            <xs:attributeGroup ref="sfml:UIElement"/>
+            <xs:attributeGroup ref="sfml:baseItemAttributes"/>
+            <xs:attributeGroup ref="sfml:StyleableElement"/>
+            <xs:attribute name="image-url" type="xs:anyURI" use="optional"/>
+            <xs:attribute name="image-width" type="sfml:positive-decimal" use="optional"/>
+            <xs:attribute name="image-height" type="sfml:positive-decimal" use="optional"/>
+            <xs:attribute name="image-position" type="sfml:imagePositionType" use="optional" default="image-top"/>
+            <xs:assert test="if(string(@width) = 'preserve-aspect') then string(@height) != 'preserve-aspect' else true()" xerces:message="width and height cant both be preserve-aspect"/>
+            <xs:assert test="not(child::node()[@flex-grow])" xerces:message="there are children of a linear-layout with the flex-grow attribute"/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="text">
+        <xs:complexType >
+            <xs:attributeGroup ref="sfml:StyleableElement"/>
+            <xs:attribute name="value" type="xs:string" use="required"/>
+            <xs:attribute name="max-lines" type="xs:integer" use="optional" default="1"/>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- collapsible layout. i.e. "show more" button the exposes more content -->
+    <xs:element name="collapsible-layout">
+        <xs:complexType >
+            <xs:sequence>
+                <xs:choice minOccurs="1" maxOccurs="1">
+                    <xs:element ref="sfml:image"/>
+                    <xs:element ref="sfml:linear-layout"/>
+                    <xs:element ref="sfml:flexbox"/>
+                    <xs:element ref="sfml:item-atom"/>
+                    <xs:element ref="sfml:collapsible-layout"/>
+                </xs:choice>
+            </xs:sequence>
+            <xs:attributeGroup ref="sfml:UIElement"/>
+            <xs:attribute name="title" type="sfml:nonEmptyString" use="required"/>
+            <xs:attribute name="exposed-title" type="xs:string" use="optional"/>
+            <!-- The icon is the asset name used on the left side of the title -->
+            <xs:attribute name="icon" type="sfml:assetName" use="optional"/>
+            <xs:attribute name="icon-url" type="xs:anyURI" use="optional"/>
+            <xs:attribute name="collapse-type" type="sfml:collapseType" default="expose"/>
+            <xs:assert test="string(@width) != 'preserve-aspect'" xerces:message="collapsible-layout width can not be dependent on the height"/>
+            <xs:assert test="string(@height) = 'wrap-content'" xerces:message="collapsible-layout height must be wrap-content"/>
+            <xs:assert test="not(child::node()[@flex-grow])" xerces:message="there are children of a linear-layout with the flex-grow attribute"/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:simpleType name="collapseType">
+        <xs:restriction base="xs:string">
+            <!-- a replace type will replace the collapsible layout with the content is covering.
+                 This content will be forever exposed and not collapsible again -->
+            <xs:enumeration value="replace"/>
+            <!-- an expose type will allow for the content to be exposed below the collapsible cover
+                 and then recovered at a later time -->
+            <xs:enumeration value="expose"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <!-- meta tags that contain data but dont really display on screen -->
+    <xs:element name="head">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:choice minOccurs="0" maxOccurs="1">
+                    <xs:element ref="sfml:wayfinder"/>
+                </xs:choice>
+                <xs:choice minOccurs="0" maxOccurs="1">
+                    <xs:element ref="sfml:styles"/>
+                </xs:choice>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="body">
+        <xs:complexType >
+            <xs:sequence>
+                <xs:choice minOccurs="1" maxOccurs="1">
+                    <xs:element ref="sfml:image"/>
+                    <xs:element ref="sfml:linear-layout"/>
+                    <xs:element ref="sfml:flexbox"/>
+                    <xs:element ref="sfml:item-atom"/>
+                    <xs:element ref="sfml:collapsible-layout"/>
+                </xs:choice>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="styles">
+        <xs:complexType >
+            <xs:sequence>
+                <xs:choice minOccurs="0" maxOccurs="unbounded">
+                    <xs:element ref="sfml:style"/>
+                </xs:choice>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="style">
+        <xs:complexType >
+            <xs:attribute name="id" type="xs:string" use="required"/>
+            <xs:attributeGroup ref="sfml:borderStyle"/>
+            <xs:attributeGroup ref="sfml:paddingStyle"/>
+            <xs:attributeGroup ref="sfml:marginStyle"/>
+            <xs:attributeGroup ref="sfml:backgroundStyle"/>
+            <xs:attributeGroup ref="sfml:textStyle"/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="wayfinder">
+        <xs:complexType >
+            <xs:sequence>
+                <xs:choice minOccurs="0" maxOccurs="unbounded">
+                    <xs:element ref="sfml:category"/>
+                </xs:choice>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="category">
+        <xs:complexType >
+            <xs:attribute name="name" type="sfml:nonEmptyString" use="required"/>
+            <xs:attribute name="anchor-id" type="xs:integer" use="required"/>
+            <xs:attribute name="id" type="xs:integer" use="optional"/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="flyer-source">
+        <xs:complexType >
+            <xs:sequence>
+                <xs:element ref="sfml:area" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+            <xs:attributeGroup ref="sfml:sourceAttributes"/>
+            <xs:attribute name="rect" type="sfml:rectType" use="required"/>
+            <xs:attribute name="path" type="xs:anyURI" use="required"/>
+            <xs:attribute name="resolutions" type="sfml:resolutionType"/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="url-source">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="sfml:area" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+            <xs:attributeGroup ref="sfml:sourceAttributes"/>
+            <xs:attribute name="url" type="xs:anyURI" use="required"/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="area">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="sfml:action" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="sfml:beacon-meta" minOccurs="0" maxOccurs="1"/>
+            </xs:sequence>
+            <xs:attributeGroup ref="sfml:baseItemAttributes"/>
+            <xs:attribute name="href" type="xs:anyURI" use="required"/>
+            <xs:attribute name="label" type="xs:string" use="optional"/>
+            <xs:attribute name="rect" type="sfml:rectType" use="required"/>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- Attr Groups -->
+    <xs:attributeGroup name="borderStyle">
+        <xs:attribute name="border-top-show" type="xs:boolean" default="false" use="optional"/>
+        <xs:attribute name="border-bottom-show" type="xs:boolean" default="false" use="optional"/>
+        <xs:attribute name="border-left-show" type="xs:boolean" default="false" use="optional"/>
+        <xs:attribute name="border-right-show" type="xs:boolean" default="false" use="optional"/>
+        <xs:attribute name="border-color" type="sfml:color" use="optional"/>
+        <xs:attribute name="border-style" type="sfml:borderStyleType" use="optional"/>
+        <xs:attribute name="border-width" type="sfml:positive-integer" use="optional"/>
+    </xs:attributeGroup>
+
+    <xs:attributeGroup name="backgroundStyle">
+        <xs:attribute name="background-url" type="xs:string" use="optional"/>
+        <xs:attribute name="background-color" type="sfml:color" use="optional"/>
+    </xs:attributeGroup>
+
+    <xs:attributeGroup name="paddingStyle">
+        <xs:attribute name="padding" type="sfml:rectType" use="optional"/>
+    </xs:attributeGroup>
+
+    <xs:attributeGroup name="marginStyle">
+        <xs:attribute name="margin" type="sfml:rectType" use="optional"/>
+    </xs:attributeGroup>
+
+    <xs:attributeGroup name="textStyle">
+        <xs:attribute name="font-face-src" type="xs:anyURI" use="optional"/>
+        <xs:attribute name="font-family" type="xs:string" use="optional"/>
+        <xs:attribute name="font-weight" type="sfml:font-weight" default="normal" use="optional"/>
+        <xs:attribute name="font-color" type="sfml:color" use="optional"/>
+        <xs:attribute name="font-size" type="xs:integer" use="optional"/>
+    </xs:attributeGroup>
+
+    <xs:attributeGroup name="baseItemAttributes">
+        <!--
+            source-id: The id of the object, meaning depends on sourceType:
+            - sourceType flyer: flyer_item_id as per fadmin
+            - sourceType ecom: ecom global ID/national hex value as per content layer
+            - sourceType ecom-search: legacy ecom item ID as per ecom services
+        -->
+        <xs:attribute name="source-id" type="xs:string" use="required"/>
+        <xs:attribute name="source" type="sfml:sourceType" use="required"/>
+        <!--
+          - serves the same purpose as the "anchor-id" in category except I dont want to name it
+          - anchor-id as that is already a parameter UIElement and since this attribute can appear
+          - on the same tag as a UIElement I cant use it. I dont want to change the category name
+          - because then this hsould be a breaking change for 1.0
+          -->
+        <xs:attribute name="target-anchor-id" type="xs:integer" use="optional"/>
+    </xs:attributeGroup>
+
+    <xs:attributeGroup name="UIElement">
+        <xs:attribute name="width" type="sfml:dimensionType" use="required"/>
+        <xs:attribute name="height" type="sfml:dimensionType" use="required"/>
+        <xs:attribute name="aspect-ratio" type="sfml:positive-decimal" default="1.0" use="optional"/>
+        <!-- flex grow is only used when the ui element is part of a flexbox parent layout -->
+        <xs:attribute name="flex-grow" type="xs:integer" use="optional"/>
+        <xs:attribute name="anchor-id" type="xs:integer" use="optional"/>
+        <xs:attribute name="id" type="xs:integer" use="optional"/>
+    </xs:attributeGroup>
+
+    <xs:attributeGroup name="sourceAttributes">
+        <xs:attribute name="width" type="sfml:positive-decimal" use="required"/>
+        <xs:attribute name="height" type="sfml:positive-decimal" use="required"/>
+    </xs:attributeGroup>
+
+    <xs:attributeGroup name="StyleableElement">
+        <xs:attribute name="style-id" type="xs:string" use="optional"/>
+    </xs:attributeGroup>
+
+
+    <!-- Types -->
+    <xs:simpleType name="language">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="en"/>
+            <xs:enumeration value="fr"/>
+            <xs:enumeration value="es"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="actionType">
+        <xs:restriction base="xs:string">
+            <!--
+              Action type link indicates the atom will link to an external URL
+              on click/tap
+              -->
+            <xs:enumeration value="link"></xs:enumeration>
+            <!--
+              Action type none indicates that the action atom cannot interact,
+              ie. does not respond to clicks/taps
+              -->
+            <xs:enumeration value="none"></xs:enumeration>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="orientationType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="horizontal"/>
+            <xs:enumeration value="vertical"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="imagePositionType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="image-top"/>
+            <xs:enumeration value="image-left"/>
+            <xs:enumeration value="image-right"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="resolutionType">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="\d+(\.\d+){0,1}( \d+(\.\d+){0,1})*"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="assetName">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[a-z_]+"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="color">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="#[\dA-Fa-f]{6}"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="font-weight">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="bold"/>
+            <xs:enumeration value="normal"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="dimensionType">
+        <xs:union memberTypes="sfml:dimensionByString sfml:positive-integer"/>
+    </xs:simpleType>
+
+    <xs:simpleType name="dimensionByString">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="match-parent"/>
+            <xs:enumeration value="wrap-content"/>
+            <xs:enumeration value="preserve-aspect"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="sourceFormatType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="tiled"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="rectType">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="([-+]?\d+(\.\d+){0,1} ){3}[-+]?\d+(\.\d+){0,1}"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="positive-integer">
+        <xs:restriction base="xs:integer">
+            <xs:minInclusive value="0"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="positive-decimal">
+        <xs:restriction base="xs:decimal">
+            <xs:minInclusive value="0"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="nonEmptyString">
+        <xs:restriction base="xs:string">
+            <xs:minLength value="1"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="sourceType">
+        <xs:restriction base="xs:string">
+            <!-- action: interactables, ie. marketing banners with external links -->
+            <xs:enumeration value="action"/>
+            <!-- coupon: not yet implemented (NYI) as of 2020-10 -->
+            <xs:enumeration value="coupon"/>
+            <!-- ecom: ecom items produced as static digital storefronts -->
+            <xs:enumeration value="ecom"/>
+            <!-- ecom-search: ecom items inserted as search ecom modules -->
+            <xs:enumeration value="ecom-search"/>
+            <!-- flyer: flyer items -->
+            <xs:enumeration value="flyer"/>
+            <!-- offer: digital offers, NYI as of 2020-10 -->
+            <xs:enumeration value="offer"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="borderStyleType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="solid"/>
+            <xs:enumeration value="dotted"/>
+            <xs:enumeration value="dashed"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="badgeApplication">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="image"/>
+            <xs:enumeration value="text"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="anchorPosition">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="start"/>
+            <xs:enumeration value="center"/>
+            <xs:enumeration value="end"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+</xs:schema>

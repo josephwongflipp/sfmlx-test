@@ -1,42 +1,15 @@
 /*
-This package is responsible for all CRUD actions against an SFML file.
-
-Actions include:
-- Counting the number of valid advertisement slots in an SFML document
-- Injecting advertisements in an SFML document
-- Returning valid SFML
+This package is responsible business logic of inserting ads into an existing sfml file
 */
 
 package sfmlparser
 
 import (
 	"encoding/xml"
-	"fmt"
 	"io/ioutil"
 
 	"github.com/beevik/etree"
 )
-
-// Generic error handler
-func checkError(e error) {
-	if e != nil {
-		panic(e)
-	}
-}
-
-// Slurps a file and returns its contents
-func ReadSFMLFile(filePath string) []byte {
-	dat, err := ioutil.ReadFile(filePath)
-	checkError(err)
-	return dat
-}
-
-// Generic XML node
-type Node struct {
-	XMLName xml.Name
-	Content []byte `xml:",innerxml"`
-	Nodes   []Node `xml:",any"`
-}
 
 // Our custom advertisement element wrapper
 type Advertisement struct {
@@ -54,96 +27,80 @@ type URLSource struct {
 	URL     string   `xml:"url,attr"`
 }
 
-// Reads in an SFML file and injects up to <maxAds> advertisements every <offset> slots
-// func injectAds(xmlData []byte, maxAds int, offset int) []byte {
-// 	buf := bytes.NewBuffer(xmlData)
-// 	dec := xml.NewDecoder(buf)
-
-// 	var sf data.Storefront
-// 	err := dec.Decode(&sf)
-// 	checkError(err)
-
-// 	for i, node := range nodes {
-
-// 		// We do not insert ads into the first and last index
-// 		if i == 0 {
-// 			continue
-// 		}
-
-// 		us := &URLSource{
-// 			Height: "wrap-content",
-// 			Width:  "match-parent",
-// 			URL:    "https://fh-uploads-addressreport.netdna-ssl.com/d79274ca-877f-437f-9ca0-e7230ea1ff46",
-// 		}
-
-// 		advertisement := &Advertisement{
-// 			Height:    "wrap-content",
-// 			Width:     "wrap-content",
-// 			URLSource: *us,
-// 		}
-
-// 		// panic idk
-// 		adNode := &Node{
-// 			// TODO: shove in advertisement info here
-// 		}
-
-// 		// TODO: insert adNode into nodes and increment i
-
-// 		encoder := xml.NewEncoder(os.Stdout)
-
-// 		nodes[i] = advertisement
-// 	}
-
-// 	return sf
-// }
-
-// func CountAdSlots(xmlData []byte) int {
-
-// 	buf := bytes.NewBuffer(xmlData)
-// 	dec := xml.NewDecoder(buf)
-
-// 	var sf Storefront
-// 	err := dec.Decode(&sf)
-// 	checkError(err)
-
-// 	firstLinearLayout := sf.Body.RootLinearLayout
-
-// 	return countLinearLayoutElements(firstLinearLayout.Nodes)
-// }
-
-func countLinearLayoutElements(nodes []Node) int {
-
-	for i, node := range nodes {
-		fmt.Printf("index: %v, element: %s\n", i, node.XMLName)
+// Generic error handler
+func handleErr(err error) {
+	if err != nil {
+		panic(err)
 	}
-
-	return len(nodes) - 1
 }
 
-func PraseEtree(d []byte) {
+// Slurps a file and returns its contents
+func ReadSFMLFile(filePath string) []byte {
+	dat, err := ioutil.ReadFile(filePath)
+	handleErr(err)
+	return dat
+}
+
+// iterates into body's linear-layout and injects ads between all children and returns the editted xml
+// TODO: Make this configurable
+func InjectAdsIntoSFML(d []byte) []byte {
 	doc := etree.NewDocument()
 	doc.ReadFromBytes(d)
-	root := doc.SelectElement("storefront")
-	fmt.Println("STOREFRONT element:", root.Tag)
 
-	body := root.SelectElement("body")
-	fmt.Println("BODY element:", body.Tag)
+	// Grabbing reference to our body's linear-layout
+	rootLL := doc.SelectElement("storefront").SelectElement("body").SelectElement("linear-layout")
 
-	rootLL := body.SelectElement("linear-layout")
-	fmt.Println("ROOT LL element:", rootLL.Tag)
+	// result slice
+	var s []*etree.Element
 
-	for _, element := range rootLL.ChildElements() {
-		fmt.Println("CHILD element:", element.Tag)
+	// Iterate each item in the linear-layout
+	for i, element := range rootLL.ChildElements() {
+		s = append(s, element)
+
+		// Do not inject an ad before the first index or after the last index.
+		if i < 16 {
+			advertisement := generateAdvertisementElement()
+			_, err := xml.Marshal(advertisement)
+			handleErr(err)
+
+			// create new xml element
+			adXMLString, err := xml.Marshal(generateAdvertisementElement())
+			handleErr(err)
+			ae := etree.NewDocument()
+			ae.ReadFromBytes(adXMLString)
+
+			// fmt.Printf("Injected an ad after index %v\n", i)
+			s = append(s, ae.FindElement("advertisement"))
+		}
 	}
 
-	// for _, book := range root.SelectElements("book") {
-	// 	fmt.Println("CHILD element:", book.Tag)
-	// 	if title := book.SelectElement("title"); title != nil {
-	// 		lang := title.SelectAttrValue("lang", "unknown")
-	// 		fmt.Printf("  TITLE: %s (%s)\n", title.Text(), lang)
-	// 	}
-	// 	for _, attr := range book.Attr {
-	// 		fmt.Printf("  ATTR: %s=%s\n", attr.Key, attr.Value)
-	// 	}
-	// }
+	for i := 0; i < len(rootLL.ChildElements()); i++ {
+		doc.SelectElement("storefront").SelectElement("body").SelectElement("linear-layout").RemoveChildAt(i)
+	}
+
+	for i := 0; i < len(s); i++ {
+		doc.SelectElement("storefront").SelectElement("body").SelectElement("linear-layout").AddChild(s[i])
+	}
+
+	b, err := doc.WriteToBytes()
+	handleErr(err)
+	// fmt.Printf("%v", string(b))
+	return b
+}
+
+// A static hardcoded advertisement element
+func generateAdvertisementElement() Advertisement {
+	urlSource := &URLSource{
+		Height: "match-parent",
+		Width:  "match-parent",
+		URL:    "https://fh-uploads-addressreport.netdna-ssl.com/d79274ca-877f-437f-9ca0-e7230ea1ff46",
+	}
+
+	advertisement := &Advertisement{
+		Height:    "wrap-content",
+		Width:     "preserve-aspect",
+		URLSource: *urlSource,
+	}
+
+	return *advertisement
 }

@@ -1,31 +1,17 @@
 package main
 
 import (
-	"encoding/xml"
+	"fmt"
+	"net/http"
 
-	"github.com/wishabi/sfmlx-test/data"
-	"github.com/wishabi/sfmlx-test/sfmlparser"
+	"github.com/wishabi/sfmlx-test/handlers"
 )
 
 func main() {
-	sfml := sfmlparser.ReadSFMLFile("./samples/loblaws.xml")
-
-	mySFML := &data.Storefront{}
-
-	err := xml.Unmarshal(sfml, mySFML)
+	fmt.Println("Starting up sfmlx-service...")
+	http.HandleFunc("/api/v1/sfmlx", handlers.GetSFMLX)
+	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
 		panic(err)
 	}
-
-	// fmt.Println(mySFML)
-	// fmt.Printf("%+v\n", mySFML)
-
-	// myXml, err := xml.Marshal(mySFML)
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// // fmt.Println(myXml)
-	// fmt.Printf(string(myXml))
-
-	sfmlparser.PraseEtree(sfml)
 }
